@@ -16,9 +16,19 @@
  */
 package org.whispersystems.textsecuregcm;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.Configuration;
+import io.dropwizard.client.JerseyClientConfiguration;
+import io.dropwizard.db.DataSourceFactory;
+import org.whispersystems.textsecuregcm.configuration.EmailConfiguration;
 import org.whispersystems.textsecuregcm.configuration.FederationConfiguration;
-import org.whispersystems.textsecuregcm.configuration.GraphiteConfiguration;
 import org.whispersystems.textsecuregcm.configuration.PushConfiguration;
 import org.whispersystems.textsecuregcm.configuration.RateLimitsConfiguration;
 import org.whispersystems.textsecuregcm.configuration.RedPhoneConfiguration;
@@ -27,17 +37,6 @@ import org.whispersystems.textsecuregcm.configuration.S3Configuration;
 import org.whispersystems.textsecuregcm.configuration.TestDeviceConfiguration;
 import org.whispersystems.textsecuregcm.configuration.TwilioConfiguration;
 import org.whispersystems.textsecuregcm.configuration.WebsocketConfiguration;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import io.dropwizard.Configuration;
-import io.dropwizard.client.JerseyClientConfiguration;
-import io.dropwizard.db.DataSourceFactory;
 
 public class WhisperServerConfiguration extends Configuration {
 
@@ -55,6 +54,11 @@ public class WhisperServerConfiguration extends Configuration {
   @Valid
   @JsonProperty
   private S3Configuration s3;
+
+  @NotNull
+  @Valid
+  @JsonProperty
+  private EmailConfiguration email;
 
   @NotNull
   @Valid
@@ -124,6 +128,10 @@ public class WhisperServerConfiguration extends Configuration {
 
   public S3Configuration getS3Configuration() {
     return s3;
+  }
+
+  public EmailConfiguration getEmailConfiguration() {
+    return email;
   }
 
   public RedisConfiguration getCacheConfiguration() {
