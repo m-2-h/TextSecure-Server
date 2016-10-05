@@ -17,10 +17,11 @@
 package org.whispersystems.textsecuregcm.auth;
 
 
+import java.io.IOException;
+
+import org.apache.commons.lang3.StringUtils;
 import org.whispersystems.textsecuregcm.util.Base64;
 import org.whispersystems.textsecuregcm.util.Util;
-
-import java.io.IOException;
 
 public class AuthorizationHeader {
 
@@ -36,10 +37,14 @@ public class AuthorizationHeader {
 
   public static AuthorizationHeader fromUserAndPassword(String user, String password) throws InvalidAuthorizationHeaderException {
     try {
-      String[] numberAndId = user.split("\\.");
-      return new AuthorizationHeader(numberAndId[0],
-                                     numberAndId.length > 1 ? Long.parseLong(numberAndId[1]) : 1,
-                                     password);
+
+      final String id = StringUtils.substringAfterLast(user, "\\.");
+      if (StringUtils.isNumeric(id)) {
+        return new AuthorizationHeader(StringUtils.substringBeforeLast(user, "\\."), Long.parseLong(id), password);
+      } else {
+        return new AuthorizationHeader(user, 1, password);
+      }
+
     } catch (NumberFormatException nfe) {
       throw new InvalidAuthorizationHeaderException(nfe);
     }

@@ -58,5 +58,11 @@ federation:
       name: somepeer
       url: https://foo.com
       authenticationToken: foo
-      certificate: in pem format 
+      certificate: in pem format
+
+email:
+  url: http://localhost:7070/emailSender?param_email={email}&param_code={code}
+  user: usr
+  password: psw
+
 

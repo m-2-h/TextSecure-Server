@@ -24,6 +24,9 @@ public class RateLimitsConfiguration {
   private RateLimitConfiguration smsDestination = new RateLimitConfiguration(2, 2);
 
   @JsonProperty
+  private RateLimitConfiguration emailDestination = new RateLimitConfiguration(2, 2);
+
+  @JsonProperty
   private RateLimitConfiguration voiceDestination = new RateLimitConfiguration(2, 1.0 / 2.0);
 
   @JsonProperty
@@ -73,6 +76,10 @@ public class RateLimitsConfiguration {
 
   public RateLimitConfiguration getSmsDestination() {
     return smsDestination;
+  }
+
+  public RateLimitConfiguration getEmailDestination() {
+    return emailDestination;
   }
 
   public RateLimitConfiguration getVoiceDestination() {

@@ -19,7 +19,6 @@ package org.whispersystems.textsecuregcm.controllers;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -45,7 +44,6 @@ import org.whispersystems.textsecuregcm.storage.PendingAccountsManager;
 import org.whispersystems.textsecuregcm.util.Constants;
 import org.whispersystems.textsecuregcm.util.Util;
 import org.whispersystems.textsecuregcm.util.VerificationCode;
-import org.whispersystems.textsecuregcm.websocket.WebSocketConnection;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -85,14 +83,14 @@ public class AccountController {
   private final Optional<AuthorizationTokenGenerator> tokenGenerator;
   private final Map<String, Integer>                  testDevices;
 
-  public AccountController(PendingAccountsManager pendingAccounts,
-                           AccountsManager accounts,
-                           RateLimiters rateLimiters,
-                           SmsSender smsSenderFactory,
-                           MessagesManager messagesManager,
-                           TimeProvider timeProvider,
-                           Optional<byte[]> authorizationKey,
-                           Map<String, Integer> testDevices)
+    public AccountController(PendingAccountsManager pendingAccounts,
+                             AccountsManager accounts,
+                             RateLimiters rateLimiters,
+                             SmsSender smsSenderFactory,
+                             MessagesManager messagesManager,
+                             TimeProvider timeProvider,
+                             Optional<byte[]> authorizationKey,
+                             Map<String, Integer> testDevices)
   {
     this.pendingAccounts  = pendingAccounts;
     this.accounts         = accounts;
@@ -117,17 +115,26 @@ public class AccountController {
                                 @QueryParam("client")   Optional<String> client)
       throws IOException, RateLimitExceededException
   {
-    if (!Util.isValidNumber(number)) {
-      logger.debug("Invalid number: " + number);
-      throw new WebApplicationException(Response.status(400).build());
-    }
 
     switch (transport) {
       case "sms":
-        rateLimiters.getSmsDestinationLimiter().validate(number);
-        break;
       case "voice":
-        rateLimiters.getVoiceDestinationLimiter().validate(number);
+        if (!Util.isValidNumber(number)) {
+          logger.info("Invalid number: {}", number);
+          throw new WebApplicationException(Response.status(400).build());
+        }
+        if ("voice".equals(transport)) {
+            rateLimiters.getVoiceDestinationLimiter().validate(number);
+        } else {
+            rateLimiters.getSmsDestinationLimiter().validate(number);
+        }
+        break;
+      case "email":
+        if (!Util.validateEmailAddressParts(number)) { // email transport must come with valid email parameter
+            logger.info("Invalid email : {}", number);
+            throw new WebApplicationException(Response.status(400).build());
+        }
+        rateLimiters.getEmailDestinationLimiter().validate(number);
         break;
       default:
         throw new WebApplicationException(Response.status(422).build());
@@ -138,10 +145,12 @@ public class AccountController {
 
     if (testDevices.containsKey(number)) {
       // noop
-    } else if (transport.equals("sms")) {
+    } else if ("sms".equals(transport)) {
       smsSender.deliverSmsVerification(number, client, verificationCode.getVerificationCodeDisplay());
-    } else if (transport.equals("voice")) {
+    } else if ("voice".equals(transport)) {
       smsSender.deliverVoxVerification(number, verificationCode.getVerificationCodeSpeech());
+    } else if ("email".equals(transport)) {
+      smsSender.deliverEmail(number, verificationCode.getVerificationCode());
     }
 
     return Response.ok().build();

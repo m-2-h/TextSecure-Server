@@ -17,12 +17,17 @@
 package org.whispersystems.textsecuregcm.sms;
 
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+
 import com.google.common.base.Optional;
 import com.twilio.sdk.TwilioRestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
+import org.whispersystems.textsecuregcm.configuration.EmailConfiguration;
+import org.whispersystems.textsecuregcm.util.Base64;
 
 public class SmsSender {
 
@@ -33,10 +38,14 @@ public class SmsSender {
   private final Logger logger = LoggerFactory.getLogger(SmsSender.class);
 
   private final TwilioSmsSender twilioSender;
+  private final EmailConfiguration emailConfiguration;
+  private final Client client;
 
-  public SmsSender(TwilioSmsSender twilioSender)
+    public SmsSender(TwilioSmsSender twilioSender, EmailConfiguration emailConfiguration, Client client)
   {
     this.twilioSender = twilioSender;
+    this.emailConfiguration = emailConfiguration;
+    this.client = client;
   }
 
   public void deliverSmsVerification(String destination, Optional<String> clientType, String verificationCode)
@@ -63,4 +72,30 @@ public class SmsSender {
       logger.info("Twilio Vox Failed: " + e.getErrorMessage());
     }
   }
+
+  public void deliverEmail(String destination, String verificationCode) {
+    try {
+
+      UriBuilder builder = UriBuilder.fromUri(emailConfiguration.getUrl())
+              .resolveTemplate("email", destination)
+              .resolveTemplate("code", verificationCode);
+
+        Response response = client.target(builder.build())
+                .request()
+                .header("Authorization", getAuthorizationHeader(emailConfiguration.getUser(), emailConfiguration.getPassword()))
+                .get();
+
+        if (response.getStatus() != 200) {
+            logger.error("Email sending failed: " + response.getStatus() + " " + response.getStatusInfo().getReasonPhrase());
+        }
+
+    } catch (Exception e) {
+      logger.error("Email sending failed: " + e.getMessage());
+    }
+  }
+
+    private String getAuthorizationHeader(String username, String password) {
+        return "Basic " + Base64.encodeBytes((username + ":" + password).getBytes());
+    }
+
 }
