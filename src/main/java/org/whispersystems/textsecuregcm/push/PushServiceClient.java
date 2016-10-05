@@ -19,11 +19,9 @@ import java.util.List;
 
 public class PushServiceClient {
 
-  private static final String PUSH_GCM_PATH     = "/api/v1/push/gcm";
   private static final String PUSH_APN_PATH     = "/api/v1/push/apn";
 
   private static final String APN_FEEDBACK_PATH = "/api/v1/feedback/apn";
-  private static final String GCM_FEEDBACK_PATH = "/api/v1/feedback/gcm";
 
   private final Logger logger = LoggerFactory.getLogger(PushServiceClient.class);
 
@@ -39,16 +37,8 @@ public class PushServiceClient {
     this.authorization = getAuthorizationHeader(config.getUsername(), config.getPassword());
   }
 
-  public void send(GcmMessage message) throws TransientPushFailureException {
-    sendPush(PUSH_GCM_PATH, message);
-  }
-
   public void send(ApnMessage message) throws TransientPushFailureException {
     sendPush(PUSH_APN_PATH, message);
-  }
-
-  public List<UnregisteredEvent> getGcmFeedback() throws IOException {
-    return getFeedback(GCM_FEEDBACK_PATH);
   }
 
   public List<UnregisteredEvent> getApnFeedback() throws IOException {

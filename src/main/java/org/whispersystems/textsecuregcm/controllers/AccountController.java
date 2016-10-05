@@ -233,32 +233,6 @@ public class AccountController {
 
   @Timed
   @PUT
-  @Path("/gcm/")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public void setGcmRegistrationId(@Auth Account account, @Valid GcmRegistrationId registrationId) {
-    Device device = account.getAuthenticatedDevice().get();
-    device.setApnId(null);
-    device.setVoipApnId(null);
-    device.setGcmId(registrationId.getGcmRegistrationId());
-
-    if (registrationId.isWebSocketChannel()) device.setFetchesMessages(true);
-    else                                     device.setFetchesMessages(false);
-
-    accounts.update(account);
-  }
-
-  @Timed
-  @DELETE
-  @Path("/gcm/")
-  public void deleteGcmRegistrationId(@Auth Account account) {
-    Device device = account.getAuthenticatedDevice().get();
-    device.setGcmId(null);
-    device.setFetchesMessages(false);
-    accounts.update(account);
-  }
-
-  @Timed
-  @PUT
   @Path("/apn/")
   @Consumes(MediaType.APPLICATION_JSON)
   public void setApnRegistrationId(@Auth Account account, @Valid ApnRegistrationId registrationId) {

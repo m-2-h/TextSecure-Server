@@ -47,15 +47,9 @@ public class FeedbackHandler implements Managed, Runnable {
     logger.info("Checking Push Server feedback...");
 
     try {
-      List<UnregisteredEvent> gcmFeedback = client.getGcmFeedback();
       List<UnregisteredEvent> apnFeedback = client.getApnFeedback();
 
-      logger.info("Got GCM feedback: " + gcmFeedback.size());
       logger.info("Got APN feedback: " + apnFeedback.size());
-
-      for (UnregisteredEvent gcmEvent : gcmFeedback) {
-        handleGcmUnregistered(gcmEvent);
-      }
 
       for (UnregisteredEvent apnEvent : apnFeedback) {
         handleApnUnregistered(apnEvent);

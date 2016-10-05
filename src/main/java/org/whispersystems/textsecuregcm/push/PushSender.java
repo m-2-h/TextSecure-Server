@@ -90,8 +90,7 @@ public class PushSender implements Managed {
   public void sendQueuedNotification(Account account, Device device, int messageQueueDepth)
       throws NotPushRegisteredException, TransientPushFailureException
   {
-    if      (device.getGcmId() != null)    sendGcmNotification(account, device);
-    else if (device.getApnId() != null)    sendApnNotification(account, device, messageQueueDepth);
+    if (device.getApnId() != null) sendApnNotification(account, device, messageQueueDepth);
     else if (!device.getFetchesMessages()) throw new NotPushRegisteredException("No notification possible!");
   }
 
@@ -100,29 +99,9 @@ public class PushSender implements Managed {
   }
 
   private void sendSynchronousMessage(Account account, Device device, Envelope message) {
-    if      (device.getGcmId() != null)   sendGcmMessage(account, device, message);
-    else if (device.getApnId() != null)   sendApnMessage(account, device, message);
+    if (device.getApnId() != null) sendApnMessage(account, device, message);
     else if (device.getFetchesMessages()) sendWebSocketMessage(account, device, message);
     else                                  throw new AssertionError();
-  }
-
-  private void sendGcmMessage(Account account, Device device, Envelope message) {
-    DeliveryStatus deliveryStatus = webSocketSender.sendMessage(account, device, message, WebsocketSender.Type.GCM);
-
-    if (!deliveryStatus.isDelivered()) {
-      sendGcmNotification(account, device);
-    }
-  }
-
-  private void sendGcmNotification(Account account, Device device) {
-    try {
-      GcmMessage gcmMessage = new GcmMessage(device.getGcmId(), account.getNumber(),
-                                             (int)device.getId(), "", false, true);
-
-      pushServiceClient.send(gcmMessage);
-    } catch (TransientPushFailureException e) {
-      logger.warn("SILENT PUSH LOSS", e);
-    }
   }
 
   private void sendApnMessage(Account account, Device device, Envelope outgoingMessage) {
