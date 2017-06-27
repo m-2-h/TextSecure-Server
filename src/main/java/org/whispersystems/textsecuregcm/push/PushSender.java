@@ -21,7 +21,6 @@ import com.codahale.metrics.SharedMetricRegistries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.entities.ApnMessage;
-import org.whispersystems.textsecuregcm.entities.GcmMessage;
 import org.whispersystems.textsecuregcm.push.ApnFallbackManager.ApnFallbackTask;
 import org.whispersystems.textsecuregcm.push.WebsocketSender.DeliveryStatus;
 import org.whispersystems.textsecuregcm.storage.Account;
@@ -41,7 +40,7 @@ public class PushSender implements Managed {
 
   private final Logger logger = LoggerFactory.getLogger(PushSender.class);
 
-  private static final String APN_PAYLOAD = "{\"aps\":{\"sound\":\"default\",\"badge\":%d,\"alert\":{\"loc-key\":\"APN_Message\"}}}";
+  private static final String APN_PAYLOAD = "{\"aps\":{\"content-available\":1}}";
 
   private final ApnFallbackManager         apnFallbackManager;
   private final PushServiceClient          pushServiceClient;
@@ -87,10 +86,10 @@ public class PushSender implements Managed {
     }
   }
 
-  public void sendQueuedNotification(Account account, Device device, int messageQueueDepth)
+  public void sendQueuedNotification(Account account, Device device)
       throws NotPushRegisteredException, TransientPushFailureException
   {
-    if (device.getApnId() != null) sendApnNotification(account, device, messageQueueDepth);
+    if (device.getApnId() != null) sendApnNotification(account, device);
     else if (!device.getFetchesMessages()) throw new NotPushRegisteredException("No notification possible!");
   }
 
@@ -108,24 +107,22 @@ public class PushSender implements Managed {
     DeliveryStatus deliveryStatus = webSocketSender.sendMessage(account, device, outgoingMessage, WebsocketSender.Type.APN);
 
     if (!deliveryStatus.isDelivered() && outgoingMessage.getType() != Envelope.Type.RECEIPT) {
-      sendApnNotification(account, device, deliveryStatus.getMessageQueueDepth());
+      sendApnNotification(account, device);
     }
   }
 
-  private void sendApnNotification(Account account, Device device, int messageQueueDepth) {
+  private void sendApnNotification(Account account, Device device) {
     ApnMessage apnMessage;
 
     if (!Util.isEmpty(device.getVoipApnId())) {
       apnMessage = new ApnMessage(device.getVoipApnId(), account.getNumber(), (int)device.getId(),
-                                  String.format(APN_PAYLOAD, messageQueueDepth),
-                                  true, System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30));
+                                  APN_PAYLOAD, true, System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30));
 
       apnFallbackManager.schedule(new WebsocketAddress(account.getNumber(), device.getId()),
                                   new ApnFallbackTask(device.getApnId(), apnMessage));
     } else {
       apnMessage = new ApnMessage(device.getApnId(), account.getNumber(), (int)device.getId(),
-                                  String.format(APN_PAYLOAD, messageQueueDepth),
-                                  false, ApnMessage.MAX_EXPIRATION);
+                                  APN_PAYLOAD, false, ApnMessage.MAX_EXPIRATION);
     }
 
     try {
