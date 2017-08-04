@@ -127,6 +127,7 @@ public class PushSender implements Managed {
 
     try {
       pushServiceClient.send(apnMessage);
+      logger.info(account.getNumber() + " " + (apnMessage.isVoip() ? "voip: " : "anp: ") + apnMessage.getApnId());
     } catch (TransientPushFailureException e) {
       logger.warn("SILENT PUSH LOSS", e);
     }
