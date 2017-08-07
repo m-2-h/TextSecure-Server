@@ -98,13 +98,14 @@ public class FeedbackHandler implements Managed, Runnable {
       Optional<Device> device = account.get().getDevice(event.getDeviceId());
 
       if (device.isPresent()) {
-        if (event.getRegistrationId().equals(device.get().getApnId())) {
+        if (event.getRegistrationId().equalsIgnoreCase(device.get().getApnId()) || event.getRegistrationId().equalsIgnoreCase(device.get().getVoipApnId())) {
           logger.info("APN Unregister APN ID matches!");
           if (device.get().getPushTimestamp() == 0 ||
               event.getTimestamp() > device.get().getPushTimestamp())
           {
             logger.info("APN Unregister timestamp matches!");
             device.get().setApnId(null);
+            device.get().setVoipApnId(null);
             accountsManager.update(account.get());
           }
         }
