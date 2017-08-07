@@ -38,9 +38,9 @@ public class AuthorizationHeader {
   public static AuthorizationHeader fromUserAndPassword(String user, String password) throws InvalidAuthorizationHeaderException {
     try {
 
-      final String id = StringUtils.substringAfterLast(user, "\\.");
+      final String id = StringUtils.substringAfterLast(user, ".");
       if (StringUtils.isNumeric(id)) {
-        return new AuthorizationHeader(StringUtils.substringBeforeLast(user, "\\."), Long.parseLong(id), password);
+        return new AuthorizationHeader(StringUtils.substringBeforeLast(user, "."), Long.parseLong(id), password);
       } else {
         return new AuthorizationHeader(user, 1, password);
       }
