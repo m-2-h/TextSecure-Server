@@ -130,7 +130,7 @@ public class WebSocketConnection implements DispatchChannel {
     int queueDepth = pushSender.getWebSocketSender().queueMessage(account, device, message);
 
     try {
-      pushSender.sendQueuedNotification(account, device);
+      pushSender.sendQueuedNotification(account, device, queueDepth);
     } catch (NotPushRegisteredException | TransientPushFailureException e) {
       logger.warn("requeueMessage", e);
     }
