@@ -37,10 +37,7 @@ import org.whispersystems.textsecuregcm.push.NotPushRegisteredException;
 import org.whispersystems.textsecuregcm.push.PushSender;
 import org.whispersystems.textsecuregcm.push.ReceiptSender;
 import org.whispersystems.textsecuregcm.push.TransientPushFailureException;
-import org.whispersystems.textsecuregcm.storage.Account;
-import org.whispersystems.textsecuregcm.storage.AccountsManager;
-import org.whispersystems.textsecuregcm.storage.Device;
-import org.whispersystems.textsecuregcm.storage.MessagesManager;
+import org.whispersystems.textsecuregcm.storage.*;
 import org.whispersystems.textsecuregcm.util.Base64;
 import org.whispersystems.textsecuregcm.util.Util;
 
@@ -74,13 +71,15 @@ public class MessageController {
   private final FederatedClientManager federatedClientManager;
   private final AccountsManager        accountsManager;
   private final MessagesManager        messagesManager;
+  private final BlockedAccounts        blockedAccounts;
 
   public MessageController(RateLimiters rateLimiters,
                            PushSender pushSender,
                            ReceiptSender receiptSender,
                            AccountsManager accountsManager,
                            MessagesManager messagesManager,
-                           FederatedClientManager federatedClientManager)
+                           FederatedClientManager federatedClientManager,
+                           BlockedAccounts blockedAccounts)
   {
     this.rateLimiters           = rateLimiters;
     this.pushSender             = pushSender;
@@ -88,6 +87,7 @@ public class MessageController {
     this.accountsManager        = accountsManager;
     this.messagesManager        = messagesManager;
     this.federatedClientManager = federatedClientManager;
+    this.blockedAccounts = blockedAccounts;
   }
 
   @Timed
@@ -172,6 +172,11 @@ public class MessageController {
 
     if (!isSyncMessage) destination = getDestinationAccount(destinationName);
     else                destination = source;
+
+    if (blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(source.getNumber(), destination.getNumber()) != null) {
+      logger.warn("Account {} is blocked by {}", source.getNumber(), destination.getNumber());
+      throw new NoSuchUserException(destinationName);
+    }
 
     validateCompleteDeviceList(destination, messages.getMessages(), isSyncMessage);
     validateRegistrationIds(destination, messages.getMessages());

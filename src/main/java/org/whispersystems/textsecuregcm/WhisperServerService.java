@@ -83,18 +83,7 @@ import org.whispersystems.textsecuregcm.push.ReceiptSender;
 import org.whispersystems.textsecuregcm.push.WebsocketSender;
 import org.whispersystems.textsecuregcm.sms.SmsSender;
 import org.whispersystems.textsecuregcm.sms.TwilioSmsSender;
-import org.whispersystems.textsecuregcm.storage.Account;
-import org.whispersystems.textsecuregcm.storage.Accounts;
-import org.whispersystems.textsecuregcm.storage.AccountsManager;
-import org.whispersystems.textsecuregcm.storage.DirectoryManager;
-import org.whispersystems.textsecuregcm.storage.Keys;
-import org.whispersystems.textsecuregcm.storage.Messages;
-import org.whispersystems.textsecuregcm.storage.MessagesManager;
-import org.whispersystems.textsecuregcm.storage.PendingAccounts;
-import org.whispersystems.textsecuregcm.storage.PendingAccountsManager;
-import org.whispersystems.textsecuregcm.storage.PendingDevices;
-import org.whispersystems.textsecuregcm.storage.PendingDevicesManager;
-import org.whispersystems.textsecuregcm.storage.PubSubManager;
+import org.whispersystems.textsecuregcm.storage.*;
 import org.whispersystems.textsecuregcm.util.Constants;
 import org.whispersystems.textsecuregcm.util.UrlSigner;
 import org.whispersystems.textsecuregcm.websocket.AuthenticatedConnectListener;
@@ -158,6 +147,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     PendingAccounts pendingAccounts = database.onDemand(PendingAccounts.class);
     PendingDevices  pendingDevices  = database.onDemand(PendingDevices.class);
     Keys            keys            = database.onDemand(Keys.class);
+    BlockedAccounts blockedAccounts = database.onDemand(BlockedAccounts.class);
     Messages        messages        = messagedb.onDemand(Messages.class);
 
     RedisClientFactory cacheClientFactory = new RedisClientFactory(config.getCacheConfiguration().getUrl());
@@ -197,7 +187,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     AttachmentController attachmentController = new AttachmentController(rateLimiters, federatedClientManager, urlSigner);
     KeysControllerV1     keysControllerV1     = new KeysControllerV1(rateLimiters, keys, accountsManager, federatedClientManager);
     KeysControllerV2     keysControllerV2     = new KeysControllerV2(rateLimiters, keys, accountsManager, federatedClientManager);
-    MessageController    messageController    = new MessageController(rateLimiters, pushSender, receiptSender, accountsManager, messagesManager, federatedClientManager);
+    MessageController    messageController    = new MessageController(rateLimiters, pushSender, receiptSender, accountsManager, messagesManager, federatedClientManager, blockedAccounts);
 
     environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<Account>()
                                                              .setAuthenticator(deviceAuthenticator)

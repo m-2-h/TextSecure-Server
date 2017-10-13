@@ -171,4 +171,23 @@
     <changeSet id="4" author="moxie">
         <dropColumn tableName="keys" columnName="identity_key"/>
     </changeSet>
+
+    <changeSet id="5" author="moxie">
+        <createTable tableName="blocked_accounts">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_number" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocked_account_number" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="blocked_accounts" indexName="blocked_accounts_idx">
+            <column name="blocked_account_number"/>
+            <column name="account_number"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

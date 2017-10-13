@@ -20,10 +20,7 @@ import org.whispersystems.textsecuregcm.limits.RateLimiter;
 import org.whispersystems.textsecuregcm.limits.RateLimiters;
 import org.whispersystems.textsecuregcm.push.PushSender;
 import org.whispersystems.textsecuregcm.push.ReceiptSender;
-import org.whispersystems.textsecuregcm.storage.Account;
-import org.whispersystems.textsecuregcm.storage.AccountsManager;
-import org.whispersystems.textsecuregcm.storage.Device;
-import org.whispersystems.textsecuregcm.storage.MessagesManager;
+import org.whispersystems.textsecuregcm.storage.*;
 import org.whispersystems.textsecuregcm.tests.util.AuthHelper;
 
 import javax.ws.rs.client.Entity;
@@ -67,7 +64,7 @@ public class MessageControllerTest {
                                                             .addProvider(new AuthValueFactoryProvider.Binder())
                                                             .setTestContainerFactory(new GrizzlyWebTestContainerFactory())
                                                             .addResource(new MessageController(rateLimiters, pushSender, receiptSender, accountsManager,
-                                                                                               messagesManager, federatedClientManager))
+                                                                                               messagesManager, federatedClientManager, mock(BlockedAccounts.class)))
                                                             .build();
 
 
