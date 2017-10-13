@@ -254,9 +254,9 @@ public class MessageController {
   {
     Optional<Account> account = accountsManager.get(destination);
 
-    /*if (!account.isPresent() || !account.get().isActive()) {
+    if (!account.isPresent() || !account.get().isActive()) {
       throw new NoSuchUserException(destination);
-    }*/
+    }
 
     return account.get();
   }
