@@ -173,9 +173,15 @@ public class MessageController {
     if (!isSyncMessage) destination = getDestinationAccount(destinationName);
     else                destination = source;
 
-    if (blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(source.getNumber(), destination.getNumber()) != null) {
-      logger.warn("Account {} is blocked by {}", source.getNumber(), destination.getNumber());
-      throw new NoSuchUserException(destinationName);
+    Boolean isAnonymousBlocked = blockedAccounts.isAnonymousBlockedAccountNumberAndAccountNumber(source.getNumber(), destination.getNumber());
+    if (isAnonymousBlocked != null) {
+        if (!isAnonymousBlocked) {
+            logger.warn("Account {} is blocked by {}", source.getNumber(), destination.getNumber());
+            throw new NoSuchUserException(destinationName);
+        } else if (messages.getAnonymous() != null && messages.getAnonymous()) {
+            logger.warn("Anonymous {} is blocked by {}", source.getNumber(), destination.getNumber());
+            throw new NoSuchUserException(destinationName);
+        }
     }
 
     validateCompleteDeviceList(destination, messages.getMessages(), isSyncMessage);
@@ -248,9 +254,9 @@ public class MessageController {
   {
     Optional<Account> account = accountsManager.get(destination);
 
-    if (!account.isPresent() || !account.get().isActive()) {
+    /*if (!account.isPresent() || !account.get().isActive()) {
       throw new NoSuchUserException(destination);
-    }
+    }*/
 
     return account.get();
   }

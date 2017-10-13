@@ -35,6 +35,9 @@ public class IncomingMessageList {
   @JsonProperty
   private long timestamp;
 
+  @JsonProperty
+  private Boolean anonymous;
+
   public IncomingMessageList() {}
 
   public List<IncomingMessage> getMessages() {
@@ -52,4 +55,13 @@ public class IncomingMessageList {
   public long getTimestamp() {
     return timestamp;
   }
+
+  public Boolean getAnonymous() {
+    return anonymous;
+  }
+
+  public void setAnonymous(Boolean anonymous) {
+    this.anonymous = anonymous;
+  }
+
 }

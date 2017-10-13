@@ -96,7 +96,7 @@ public class FederatedControllerTest {
     when(keysControllerV2.getSignedKey(any(Account.class))).thenReturn(Optional.of(signedPreKey));
     when(keysControllerV2.getDeviceKeys(any(Account.class), anyString(), anyString(), any(Optional.class)))
         .thenReturn(Optional.of(preKeyResponseV2));
-    when(blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
+    when(blockedAccounts.isAnonymousBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
   }
 
   @Test

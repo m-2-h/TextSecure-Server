@@ -88,7 +88,7 @@ public class MessageControllerTest {
     when(accountsManager.get(eq(MULTI_DEVICE_RECIPIENT))).thenReturn(Optional.of(multiDeviceAccount));
 
     when(rateLimiters.getMessagesLimiter()).thenReturn(rateLimiter);
-    when(blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
+    when(blockedAccounts.isAnonymousBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
   }
   
   @Test
