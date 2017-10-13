@@ -183,6 +183,9 @@
             <column name="blocked_account_number" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="anonymous_only" type="boolean">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
         <createIndex tableName="blocked_accounts" indexName="blocked_accounts_idx">
             <column name="blocked_account_number"/>
