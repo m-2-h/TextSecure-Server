@@ -48,13 +48,14 @@ public class MessageControllerTest {
   private static final String SINGLE_DEVICE_RECIPIENT = "+14151111111";
   private static final String MULTI_DEVICE_RECIPIENT  = "+14152222222";
 
-  private  final PushSender             pushSender             = mock(PushSender.class            );
+  private  final PushSender             pushSender             = mock(PushSender.class);
   private  final ReceiptSender          receiptSender          = mock(ReceiptSender.class);
   private  final FederatedClientManager federatedClientManager = mock(FederatedClientManager.class);
-  private  final AccountsManager        accountsManager        = mock(AccountsManager.class       );
+  private  final AccountsManager        accountsManager        = mock(AccountsManager.class);
   private  final MessagesManager        messagesManager        = mock(MessagesManager.class);
-  private  final RateLimiters           rateLimiters           = mock(RateLimiters.class          );
-  private  final RateLimiter            rateLimiter            = mock(RateLimiter.class           );
+  private  final RateLimiters           rateLimiters           = mock(RateLimiters.class);
+  private  final RateLimiter            rateLimiter            = mock(RateLimiter.class);
+  private  final BlockedAccounts        blockedAccounts        = mock(BlockedAccounts.class);
 
   private  final ObjectMapper mapper = new ObjectMapper();
 
@@ -64,7 +65,7 @@ public class MessageControllerTest {
                                                             .addProvider(new AuthValueFactoryProvider.Binder())
                                                             .setTestContainerFactory(new GrizzlyWebTestContainerFactory())
                                                             .addResource(new MessageController(rateLimiters, pushSender, receiptSender, accountsManager,
-                                                                                               messagesManager, federatedClientManager, mock(BlockedAccounts.class)))
+                                                                                               messagesManager, federatedClientManager, blockedAccounts))
                                                             .build();
 
 
@@ -87,6 +88,7 @@ public class MessageControllerTest {
     when(accountsManager.get(eq(MULTI_DEVICE_RECIPIENT))).thenReturn(Optional.of(multiDeviceAccount));
 
     when(rateLimiters.getMessagesLimiter()).thenReturn(rateLimiter);
+    when(blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
   }
   
   @Test

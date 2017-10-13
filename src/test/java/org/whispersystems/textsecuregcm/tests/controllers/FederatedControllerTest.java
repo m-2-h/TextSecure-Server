@@ -53,13 +53,14 @@ public class FederatedControllerTest {
   private MessagesManager        messagesManager        = mock(MessagesManager.class);
   private RateLimiters           rateLimiters           = mock(RateLimiters.class          );
   private RateLimiter            rateLimiter            = mock(RateLimiter.class           );
+  private BlockedAccounts        blockedAccounts        = mock(BlockedAccounts.class);
 
   private final SignedPreKey signedPreKey = new SignedPreKey(3333, "foo", "baar");
   private final PreKeyResponseV2 preKeyResponseV2 = new PreKeyResponseV2("foo", new LinkedList<PreKeyResponseItemV2>());
 
   private final ObjectMapper mapper = new ObjectMapper();
 
-  private final MessageController messageController = new MessageController(rateLimiters, pushSender, receiptSender, accountsManager, messagesManager, federatedClientManager, mock(BlockedAccounts.class));
+  private final MessageController messageController = new MessageController(rateLimiters, pushSender, receiptSender, accountsManager, messagesManager, federatedClientManager, blockedAccounts);
   private final KeysControllerV2  keysControllerV2  = mock(KeysControllerV2.class);
 
   @Rule
@@ -95,6 +96,7 @@ public class FederatedControllerTest {
     when(keysControllerV2.getSignedKey(any(Account.class))).thenReturn(Optional.of(signedPreKey));
     when(keysControllerV2.getDeviceKeys(any(Account.class), anyString(), anyString(), any(Optional.class)))
         .thenReturn(Optional.of(preKeyResponseV2));
+    when(blockedAccounts.findIdByBlockedAccountNumberAndAccountNumber(anyString(), anyString())).thenReturn(null);
   }
 
   @Test
