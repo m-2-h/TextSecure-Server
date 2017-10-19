@@ -16,9 +16,27 @@
  */
 package org.whispersystems.textsecuregcm.controllers;
 
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.protobuf.ByteString;
+import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.entities.IncomingMessage;
@@ -37,28 +55,13 @@ import org.whispersystems.textsecuregcm.push.NotPushRegisteredException;
 import org.whispersystems.textsecuregcm.push.PushSender;
 import org.whispersystems.textsecuregcm.push.ReceiptSender;
 import org.whispersystems.textsecuregcm.push.TransientPushFailureException;
-import org.whispersystems.textsecuregcm.storage.*;
+import org.whispersystems.textsecuregcm.storage.Account;
+import org.whispersystems.textsecuregcm.storage.AccountsManager;
+import org.whispersystems.textsecuregcm.storage.BlockedAccounts;
+import org.whispersystems.textsecuregcm.storage.Device;
+import org.whispersystems.textsecuregcm.storage.MessagesManager;
 import org.whispersystems.textsecuregcm.util.Base64;
 import org.whispersystems.textsecuregcm.util.Util;
-
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import io.dropwizard.auth.Auth;
 
 @Path("/v1/messages")
 public class MessageController {
@@ -106,9 +109,11 @@ public class MessageController {
       boolean isSyncMessage = source.getNumber().equals(destinationName);
 
       if (Util.isEmpty(messages.getRelay())) sendLocalMessage(source, destinationName, messages, isSyncMessage);
-      else                                   sendRelayMessage(source, destinationName, messages, isSyncMessage);
+      else sendRelayMessage(source, destinationName, messages, isSyncMessage);
 
       return new SendMessageResponse(!isSyncMessage && source.getActiveDeviceCount() > 1);
+    } catch (BlockedUserException e) {
+      return new SendMessageResponse(!source.getNumber().equals(destinationName) && source.getActiveDeviceCount() > 1);
     } catch (NoSuchUserException e) {
       throw new WebApplicationException(Response.status(404).build());
     } catch (MismatchedDevicesException e) {
@@ -166,7 +171,7 @@ public class MessageController {
                                 String destinationName,
                                 IncomingMessageList messages,
                                 boolean isSyncMessage)
-      throws NoSuchUserException, MismatchedDevicesException, StaleDevicesException
+      throws NoSuchUserException, MismatchedDevicesException, StaleDevicesException, BlockedUserException
   {
     Account destination;
 
@@ -177,10 +182,10 @@ public class MessageController {
     if (isAnonymousBlocked != null) {
         if (!isAnonymousBlocked) {
             logger.warn("Account {} is blocked by {}", source.getNumber(), destination.getNumber());
-            throw new NoSuchUserException(destinationName);
+            throw new BlockedUserException();
         } else if (messages.getAnonymous() != null && messages.getAnonymous()) {
             logger.warn("Anonymous {} is blocked by {}", source.getNumber(), destination.getNumber());
-            throw new NoSuchUserException(destinationName);
+            throw new BlockedUserException();
         }
     }
 
